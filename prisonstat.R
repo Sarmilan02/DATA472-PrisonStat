@@ -1,160 +1,262 @@
 library(readxl)
-library(dplyr)
+library(writexl)
+library(tidyr)
 
-# Enter the excel path
-excel_path <- "C:/Users/sarmi/OneDrive/Documents/Sem 2/Data Engineering/Individual project/Quarterly_Prison_Statistics_-_March_2024.xlsx"
-
-sheet_names <- excel_sheets(excel_path)
-
-# Create an empty list to store dataframes
-list_of_dfs <- list()
-
-# Read each sheet into a dataframe and store in the list
-for (sheet in sheet_names) {
-  list_of_dfs[[sheet]] <- read_excel(excel_path, sheet = sheet)
+# Function to read Excel file and return a list of data frames
+read_excel_sheets <- function(file_path) {
+  sheet_names <- excel_sheets(file_path)
+  all_data <- lapply(sheet_names, function(sheet) {
+    read_excel(file_path, sheet = sheet)
+  })
+  return(all_data)
 }
 
-# Access dataframe from the first sheet
-df1 <- list_of_dfs[[sheet_names[1]]]
-
-# Access dataframe from a sheet named "Sheet1"
-df_sheet1 <- list_of_dfs[["Sheet1"]]
-
-Age <- list_of_dfs[[sheet_names[2]]]
-df_sheet2 <- list_of_dfs[["Sheet2"]]
-
-Ethnicity <- list_of_dfs[[sheet_names[3]]]
-df_sheet3 <- list_of_dfs[["Sheet3"]]
-
-Security_class <- list_of_dfs[[sheet_names[4]]]
-df_sheet4 <- list_of_dfs[["Sheet4"]]
-
-Offence_type <- list_of_dfs[[sheet_names[5]]]
-df_sheet5 <- list_of_dfs[["Sheet5"]]
-
-
-# Identify the date columns
-date_columns <- colnames(df1)[3:27] # date columns start from column 3 to column 27
-date_columns <- colnames(Age)[2:26]
-
-# Convert numeric values representing dates into actual date objects for column names only
-new_column_names <- format(as.Date(as.numeric(date_columns), origin = "1899-12-30"), "%Y-%m-%d") # Format date as "YYYY-MM-DD"
-colnames(df1)[3:27] <- new_column_names
-colnames(Age)[2:26] <- new_column_names
-colnames(Ethnicity)[2:26] <- new_column_names
-colnames(Security_class)[2:26] <- new_column_names
-colnames(Offence_type)[2:26] <- new_column_names
-
-# Select the total prisioner count information
-total_prisoner <- df1[2:8, ]
-
-# Transpose the selected table
-total_prisoner <- t(total_prisoner)
-total_prisoner <- total_prisoner[-1,]
-# Select the total male prisioner count information
-total_male_prisoner <- df1[11:17, ]
-
-# Transpose the selected table
-total_male_prisoner <- t(total_male_prisoner)
-total_male_prisoner <- total_male_prisoner[-1,]
-
-
-create_male_tables <- function(df1) {
-  start_row <- 18
-  end_row <- 137
-  all_tables <- list()  # Initialize an empty list to store tables
-  
-  for (i in seq(start_row, end_row, by = 8)) {
-    end_table_row <- min(i + 7, end_row)
-    table_data <- df1[i:end_table_row, ]
-    if (nrow(table_data) >= 2) {
-      table_name <- as.character(table_data[2, 1])  # Get the table name from column 1, row 2
-      assign(table_name, table_data[-1, ], envir = .GlobalEnv)  # Assign the table to a variable with the table name
-      all_tables[[table_name]] <- table_data[-1, ]  # Store the table data in the list
+# Function to clean and format data frames
+clean_data_frames <- function(df_list) {
+  cleaning_df <- function(df) {
+    for (i in 1:length(df)) {
+      # Add column names as the first row
+      df[[i]] <- rbind(as.character(names(df[[i]])), df[[i]])
+      colnames(df[[i]]) <- NULL
+      
+      # Transpose dataframe
+      df[[i]] <- as.data.frame(t(df[[i]]))
+      
+      # Set "Date" in the first row
+      df[[i]][1, 1] <- "Date"
+      
+      # Set column names as the first row
+      colnames(df[[i]]) <- df[[i]][1, ]
+      
+      # Remove the first row
+      df[[i]] <- df[[i]][-1, ]
+      
+      # Convert Dates into Date format
+      df[[i]]$Date <- as.Date(as.numeric(df[[i]]$Date), origin = "1899-12-30")
+      
+      # Replace NA values with 0
+      df[[i]][is.na(df[[i]])] <- 0
     }
+    return(df)
   }
   
-  return(all_tables)
+  # Apply cleaning function to each data frame in the list
+  cleaned_list <- lapply(df_list, cleaning_df)
+  return(cleaned_list)
 }
 
-# Call the function with your dataframe
-all_tables <- create_male_tables(df1)
-
-# Combine all tables into a single dataframe 
-combined_dataframe <- do.call(rbind, all_tables)
-
-# Save each table as a separate dataframe
-for (table_name in names(all_tables)) {
-  assign(paste0(table_name, "_df"), all_tables[[table_name]], envir = .GlobalEnv)
-}
-
-rownames(combined_dataframe) <- NULL
-
-# Rename the columns
-colnames(combined_dataframe)[1:2] <- c("Prison Location", "Prison Type")
-
-
-create_female_tables <- function(df1) {
-  start_row <- 147
-  end_row <- 170
-  all_tables <- list()  # Initialize an empty list to store tables
-  
-  for (i in seq(start_row, end_row, by = 8)) {
-    end_table_row <- min(i + 7, end_row)
-    table_data <- df1[i:end_table_row, ]
-    if (nrow(table_data) >= 2) {
-      table_name <- as.character(table_data[2, 1])  # Get the table name from column 1, row 2
-      assign(table_name, table_data[-1, ], envir = .GlobalEnv)  # Assign the table to a variable with the table name
-      all_tables[[table_name]] <- table_data[-1, ]  # Store the table data in the list
+# Function to delete repetitive rows and bind data frames
+delete_and_bind <- function(df1, df2, start_i, end_i) {
+  delete_repetition_df <- function(df1, df2, start_i, end_i) {
+    for (i in start_i:end_i) {
+      addon <- i * 8
+      location_value <- colnames(df2)[(2 + addon)]
+      selected_df <- df2[, c(1, (3 + addon):(9 + addon))]
+      selected_df$Location <- location_value
+      df1 <- rbind(df1, selected_df)
     }
+    return(df1)
   }
   
-  return(all_tables)
+  df1 <- delete_repetition_df(df1, df2, start_i, end_i)
+  return(df1)
 }
 
-# Call the function with your dataframe
-all_tables <- create_female_tables(df1)
-
-# Combine all tables into a single dataframe 
-combined_female_dataframe <- do.call(rbind, all_tables)
-
-# Save each table as a separate dataframe
-for (table_name in names(all_tables)) {
-  assign(paste0(table_name, "_df"), all_tables[[table_name]], envir = .GlobalEnv)
+# Function to pivot data frames
+pivot_data <- function(df_list, name_to, end_col) {
+  pivot_longer_df <- function(df, name_to, end_col) {
+    col_end <- as.numeric(end_col)
+    df <- pivot_longer(df, cols = 2:col_end, names_to = name_to, values_to = "Observations")
+    return(df)
+  }
+  
+  for (i in seq_along(df_list)) {
+    df_list[[i]] <- pivot_longer_df(df_list[[i]], name_to[i], end_col[i])
+  }
+  
+  return(df_list)
 }
 
-rownames(combined_female_dataframe) <- NULL
+# Library to read the Downloaded Excel file
+library(readxl)
+library(writexl)
+library(tidyr)
 
-# Rename the column names
-colnames(combined_female_dataframe)[1:2] <- c("Prison Location", "Prison Type")
+# Getting the current working directory to set the path
+path <- getwd()
 
-# Add the Gender column
-combined_dataframe$Gender <- "Male"
-combined_female_dataframe$Gender <- "Female"
+# Getting the filename of the downloaded excel file from the text named filename.txt
+filename <- paste0(path, "/filename.txt")
+filename <- readLines(filename)
 
-# Combine the two dataframes
-Population <- rbind(combined_dataframe, combined_female_dataframe)
+# The path to the excel file
+path <- paste0(path, "/", filename)
 
-# Uploading to PostgreSQL
-library(RPostgres)
-library(DBI)
+# Since the excel file consists of different Sheets, getting all the sheet names
+sheet_names <- excel_sheets(path)
 
-con <- dbConnect(
-  RPostgres::Postgres(),
-  dbname = "prisonstatistics",
-  host = "localhost",   
-  port = 5432,         
-  user = "sarmilan",
-  password = "abc"
+# Initializing for the List of Data frame
+all_data <- list()
+
+for (sheet_name in sheet_names){
+  # Reading the data in individual sheets
+  data <- as.data.frame(read_excel(path, sheet = sheet_name))
+  
+  # Assigning the data in the list
+  all_data[[sheet_name]] <- data
+}
+rm(data)
+
+cleaning_df <- function(df) {
+  for (i in 1:length(df)) {
+    # Add column names as the first row
+    df[[i]] <- rbind(as.character(names(df[[i]])), df[[i]])
+    
+    # Remove column names
+    colnames(df[[i]]) <- NULL
+    
+    # Transpose dataframe
+    df[[i]] <- as.data.frame(t(df[[i]]))
+    
+    # Set "Date" in the first row
+    df[[i]][1, 1] <- "Date"
+    
+    # Set column names as the first row
+    colnames(df[[i]]) <- df[[i]][1, ]
+    
+    # Remove the first row
+    df[[i]] <- df[[i]][-1, ]
+    
+    # Convert Dates into Date format
+    df[[i]]$Date <- as.Date(as.numeric(df[[i]]$Date), origin = "1899-12-30")
+    
+    # Replace NA values with 0
+    df[[i]][is.na(df[[i]])] <- 0
+  }
+  return(df)
+}
+
+delete_repetition_df <- function(df1, df2, start_i, end_i){
+  for (i in start_i:end_i) {
+    # Repetitive count
+    addon <- i * 8
+    
+    # Getting the value for Locations columns
+    location_value <- colnames(df2)[(2+addon)]
+    
+    # Selecting the columns for binding
+    selected_df <- df2[, c(1,(3+addon):(9+addon))]
+    
+    # Adding location column to the data set
+    selected_df$Location <- location_value
+    
+    # Binding the data
+    df1 <- rbind(df1,selected_df)
+  }
+  return(df1)
+}
+
+make_csv <- function(df, filenames){
+  for (i in 1:length(filenames)) {
+    write.csv(df[[i]], filenames[i], row.names = FALSE)
+  }
+  return(df)
+}
+
+pivot_data <- function(df,name_to,end_col){
+  for(i in 1:length(df)){
+    col_end <- as.numeric(end_col[i])
+    df[[i]] <- pivot_longer(df[[i]],
+                            cols = 2: col_end,
+                            names_to = name_to[i],
+                            values_to = "Observations"
+    )
+  }
+  return(df)
+}
+
+# Dealing with the first sheet which is Population
+Population <- all_data[["Population"]]
+
+# Separate the Population Sheet into Total Prisoners, Male Prisoners, and Women Prisoners
+list_population_df <- list()
+list_population_df[[1]] <- Population[18:137, 2: ncol(Population)]  # Male Prisoners Data  
+list_population_df[[2]] <- Population[147:170, 2: ncol(Population)] # Women Prisoners Data
+
+# Transposing the data to convert dates as rows and providing a cleaner look. 
+# General data cleaning date format and percentage values are changed back to out of 100.
+list_population_df <- cleaning_df(list_population_df)
+
+filenames <- c( 
+  "Prisoner Population.csv", 
+  "Age Group.csv",
+  "Ethnicity.csv",
+  "Security Class.csv", 
+  "Offence Type.csv"
 )
 
+# Total Prisoners Data is cleaned by the general cleaning process
+# Male Prisoners Data Cleaning
+male_prisoner_df <- list_population_df[[1]][, 1:9]
+male_prisoner_df$Location <- colnames(male_prisoner_df)[2]
+male_prisoner_df <- male_prisoner_df[, -2]
 
-# List of dataframes to write to the database
-all_dfs <- list(Population = Population, Age = Age, Ethnicity = Ethnicity, Offence_type = Offence_type, Security_class = Security_class)
-tablenames <- names(all_dfs)  # Names of the tables
+list_population_df[[1]] <- delete_repetition_df(male_prisoner_df, list_population_df[[1]], 1, 14)
+rm(male_prisoner_df)
 
-for(i in 1:5) {
-  dbWriteTable(con, tablenames[i], all_dfs[[i]], overwrite = TRUE, row.names = FALSE)
+# Women Prisoners Data Cleaning
+women_prisoner_df <- list_population_df[[2]][, 1:9]
+women_prisoner_df$Location <- colnames(women_prisoner_df)[2]
+women_prisoner_df <- women_prisoner_df[, -2]
+
+list_population_df[[2]] <- delete_repetition_df(women_prisoner_df, list_population_df[[2]], 1, 2)
+rm(women_prisoner_df)
+
+col_end <- list()
+column_names <- c("Population Type", "Population Type")
+for (i in 1:length(column_names)) {
+  col_end[i] <- ncol(list_population_df[[i]]) - 1
 }
 
+list_population_df <- pivot_data(list_population_df, column_names, col_end)
+list_population_df[[1]]$'Gender' <- "Male"
+list_population_df[[2]]$'Gender' <- "Female"
+
+all_data[[1]] <- rbind(list_population_df[[1]], list_population_df[[2]])
+
+all_data[[1]]$Observations <- as.numeric(all_data[[1]]$Observations)
+
+all_data[[1]]$Observations[all_data[[1]]$`Population Type` == "Population percentage"] <- 
+  all_data[[1]]$Observations[all_data[[1]]$`Population Type` == "Population percentage"] * 100
+
+rm(Population)
+
+# Dealing with the next four sheets in the data set, which are Age, Ethnicity, Security class and Offence Type, together because they are similar
+list_AESO_df <- list() # AES stands for Age, Ethnicity, Security Class and Offence Type 
+list_AESO_df[[1]] <- all_data[["Age"]]
+list_AESO_df[[2]] <- all_data[["Ethnicity"]]
+list_AESO_df[[3]] <- all_data[["Security class"]]
+list_AESO_df[[4]] <- all_data[["Offence type"]]
+
+list_AESO_df <- cleaning_df(list_AESO_df)
+
+list_AESO_df[[4]] <- list_AESO_df[[4]][, 1:24]
+
+column_names <- c("Age group", "Ethnicity", "Security class", "Offense type")
+for(i in 1:length(list_AESO_df)){
+  col_end[i] <- ncol(list_AESO_df[[i]])
+}
+
+list_AESO_df <- pivot_data(list_AESO_df, column_names, col_end)
+
+for(i in 1:4){
+  all_data[[i + 1]] <- list_AESO_df[[i]]
+  all_data[[i + 1]]$Observations <- as.numeric(all_data[[i + 1]]$Observations) * 100
+}
+
+rm(col_end)
+rm(list_AESO_df)
+rm(list_population_df)
+
+all_data <- make_csv(all_data, filenames)
 
