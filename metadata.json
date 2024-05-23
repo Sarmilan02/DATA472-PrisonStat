@@ -1,0 +1,149 @@
+{
+    "Available Sheets":{
+        "Population" : "Sheets contains about the population of prisoners in different locations and the prison type",
+        "Age" : "Sheets contains the various age group of the prisoners",
+        "Ethnicity" : "Sheets contain the ethnicitiy of the prisoners",
+        "Security Class" : "Sheets contains the security level of prisoners",
+        "Offense Type" : "Sheet contains the type of offense has been made by the prisoners"
+    },
+    
+    "Population": {
+        "Dimension" : {
+            "Date" : "Quarterly date since 31/03/2018",
+            "Location" : "Location of the prison available",
+            "Population Type" : "On what type the prisoners have been arrested",
+            "Observation" : "Count",
+            "Gender" : "Gender of the prisoners",
+        
+            "Measurement" : {
+                "Location" : [
+                    "Arohata Prison",
+                    "Auckland prison",
+                    "Auckland Region Women's Corrections Facility",
+                    "Auckland South Corrections Facility",
+                    "Christchurch Men's Prison",
+                    "Christchurch Women's Prison",
+                    "Hawke's Bay Regional Prison",
+                    "Invercargill Prison",
+                    "Manawatu Prison",
+                    "Mount Eden Corrections Facility",
+                    "Northland Region Corrections Facility",
+                    "Otago Corrections Facility",
+                    "Rimutaka Prison",
+                    "Rolleston Prison",
+                    "Spring Hill Corrections Facility",
+                    "Tongariro Prison",
+                    "Waikeria Prison",
+                    "Whanganui Prison"
+                ],
+
+                "Population Type" : [
+                    "Remand accused prisoners",
+                    "Remand convicted prisoners",
+                    "Sentenced prisoners", 
+                    "Onsite population", 
+                    "Offsite population", 
+                    "Total population", 
+                    "Population percentage"
+                ],
+                "Gender" : [
+                    "Male",
+                    "Female"
+                ]
+            }
+        
+        }   
+    },
+
+    "Age Group": {
+        "Dimension" :{
+            "Date" :"Quarterly date in YYYY-MM-DD",
+            "Age group" : "Age group of the prisoners",
+            "Observation" : "Count",
+
+            "Measurement" : {
+                "Age group" : [
+                    "Under 20",
+                    "20 - 24",
+                    "25 - 29",
+                    "30 - 39",
+                    "40 - 49",
+                    "50 - 59",
+                    "60 and over"
+                ]
+            }
+        },
+    "Ethnicity" : {
+        "Dimension" :{
+            "Date" : "Quarterly date in YYYY-MM-DD",
+            "Ethnicity" : "Ethnnicity of the prisoners",
+            "Observation" : "Count",
+
+            "Measurement" : {
+                "Ethnicity" : [
+                    "MÄori",
+                    "European",
+                    "Pacific",
+                    "Other (incl. Asian)",
+                    "Unknown"
+                ]
+            }
+        },
+
+    "Security Class" : {
+        "Dimension" : {
+            "Date" : "Quarterly date in YYYY-MM-DD",
+            "Security class" : "Security level of prisoners",
+            "Observation" : "Count",
+
+            "Measurement" : {
+                "Security class" : [
+                    "Maximum",
+                    "High",
+                    "Low Medium",
+                    "Low",
+                    "Minimum",
+                    "Unclassified"
+                ]
+            }
+        },
+
+    "Offense Type" : {
+        "Dimension" : {
+            "Date" : "Quarterly date in YYYY-MM-DD",
+            "Offense type" : "Type of offense by the prisoners",
+            "Observation" : "Count",
+
+            "Measurement" : {
+                "Offense type" : [
+                    "Sexual Assault",
+                    "Acts Intended To Cause Injury",
+                    "Unlawful Entry With Intent/Burglary",
+                    "Homicide",
+                    "Illicit Drug Offences",
+                    "Robbery, Extortion",
+                    "Offences Against Justice",
+                    "Theft",
+                    "Abduction, Harassment",
+                    "Prohibited And Regulated Weapons",
+                    "Traffic",
+                    "Fraud, Deception",
+                    "Property Damage",
+                    "Public Order",
+                    "Dangerous Or Negligent Acts",
+                    "Miscellaneous Offences",
+                    "Unknown",
+                    "Violence",
+                    "Drugs",
+                    "Dishonesty",
+                    "Other",
+                    "Weapons",
+                    "Breaches"
+                ]
+            }
+        }
+    }
+    }
+    }    
+    }
+}
