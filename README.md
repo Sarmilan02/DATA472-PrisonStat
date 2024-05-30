@@ -1,44 +1,67 @@
 Data Engineering Individual Project
-This is the individual project I submitted for the client that was brought to us for our data engineering course.
+Overview
+This project was submitted as part of a data engineering course, involving a client-provided dataset from a city council. The goal was to collect, clean, and transform the data into SDMX format, and make it accessible via an API.
 
 AIM
-The aim was to collect data from the city council presented to us, clean the data, create the metadata, convert the data into SDMX format, and provide the data to the client.
+The aim was to:
 
-Explanation
-scrape\ prison\ statistics.py
-The purpose of this Python script is to scrape data from the specified website. The scraping process is automated or scheduled to run quarterly as required to obtain the latest data. Once collected, the data is stored as an Excel file, and the filename is saved in a text file.
-
-prisonstat.R
-The purpose of this R script is to clean the acquired data. RStudio was chosen for its excellent data visualization and handling capabilities. All Not Available fields are set to zero during cleaning. The cleaned data is then converted to CSV files and saved.
-
-prisonstatjson.py
-This Python script creates an API for the data and metadata using Flask.
-
-metaData.json
-This file provides metadata about the tables, including their dimensions and respective observations.
-
-filename.txt
-This file lists the Python and R packages that need to be installed.
-
+Collect data from the city council.
+Clean the data.
+Create metadata.
+Convert the data into SDMX format.
+Provide the data to the client.
+Components and Scripts
+1. scrape_prison_statistics.py
+Purpose: Scrapes data from a specified website.
+Details:
+The script runs quarterly to obtain the latest data.
+The data is stored as an Excel file.
+The filename is saved in a text file for reference.
+2. prisonstat.R
+Purpose: Cleans the acquired data using RStudio.
+Details:
+Not Available fields are set to zero.
+The cleaned data is saved as CSV files.
+3. prisonstatjson.py
+Purpose: Creates an API using Flask to provide data and metadata.
+Details:
+The API serves both data and metadata in JSON format.
+4. metaData.json
+Purpose: Provides metadata about the data tables.
+Details:
+Includes information on dimensions and observations.
+5. filename.txt
+Purpose: Lists the Python and R packages needed.
+Details:
+Ensures all necessary packages are installed for the scripts to run.
+Directory Structure
 Download
-This directory contains the downloaded quarterly statistics and the text file with the filename.
-
+Contains the downloaded quarterly statistics and the text file with the filename.
 Cleaned
-This directory contains all the cleaned CSV files obtained after running prisonstat.R.
-
+Contains all cleaned CSV files obtained after running prisonstat.R.
 Process
-scrape\ prison\ statistics.py: This script scrapes the quarterly statistics from the website and saves the data in the Download folder. It also creates a text file named filename.txt containing the name of the downloaded file. This ensures smooth uploading of the quarterly statistics file during the cleaning phase in R.
+Data Collection: scrape_prison_statistics.py
 
-prisonstat.R: This script cleans the data, making it presentable, and saves it as CSV files in the Cleaned directory.
+Scrapes quarterly statistics and saves the data in the Download folder.
+Creates filename.txt with the downloaded file name.
+Data Cleaning: prisonstat.R
 
-dataFlask.py: This script runs the API, providing the required data and metadata in JSON format.
+Cleans and prepares the data, then saves it as CSV files in the Cleaned directory.
+API Creation: prisonstatjson.py
 
-All files are deployed on an EC2 instance in AWS. The necessary packages are installed, and cron jobs are set to run the scripts every three months to fetch the latest quarterly statistics.
-
+Runs the API to provide data and metadata in JSON format.
+Deployment
+All scripts are deployed on an EC2 instance in AWS.
+Necessary packages are installed.
+Cron jobs are set up to run the scripts every three months to fetch the latest data.
 Cron Jobs
-The following cron jobs are set up to run the scripts automatically:
+**0 0 1 */3 ***: scrape_prison_statistics.py runs quarterly at midnight on the first day of the month.
+**2 0 1 */3 ***: prisonstat.R runs quarterly at 12:02 AM on the first day of the month.
+Example Cron Schedule:
+12:00 AM: scrape_prison_statistics.py runs.
+12:02 AM: prisonstat.R runs.
+API Endpoints
+[Data]: (http://3.107.58.175:5000/svi40/prisonstat)
+[Metadata]: (http://3.107.58.175:5000/svi40/prisonstatmeta)
 
-0 0 1 */3 * /DATA472-PrisonStat/scrape\ prison\ statistics.py
-2 0 1 */3 * /DATA472-PrisonStat/prisonstat.R
-12:00 AM: scrape\ prison\ statistics.py runs to scrape the data.
-12:02 AM: prisonstat.R runs to clean the data.
+This README provides an overview and detailed explanation of the project's components, processes, and deployment setup. For further details, refer to the respective scripts and metadata files.
