@@ -83,8 +83,9 @@ Example Cron Schedule:
 12:02 AM: prisonstat.R runs.
 
 API Endpoints
-[Data]: (http://3.107.58.175:5000/svi40/prisonstat)
-[Metadata]: (http://3.107.58.175:5000/svi40/prisonstatmeta)
+
+Data: (http://3.107.58.175:5000/svi40/prisonstat)
+Metadata: (http://3.107.58.175:5000/svi40/prisonstatmeta)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 This README provides an overview and detailed explanation of the project's components, processes, and deployment setup. For further details, refer to the respective scripts and metadata files.
